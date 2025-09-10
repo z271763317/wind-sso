@@ -31,17 +31,19 @@
 	#异步线程数_保存（单数据。默认：1）
 	thread_save=2
 
+-- 导入数据库
+
+    将【wind-sso.sql】导入到数据库，数据库名：wind-sso（若修改，则相关配置也一并修改）。根据实际情况配置（有例子和表字段说明），若不想在该处修改，可部署【wind-sso-bg】系统，通过界面修改配置
+
 -- SSO核心配置
 
  	需要在数据库表设置，或部署【wind-sso-bg】后台管理系统，通过界面化配置
 
 -- 步骤（Java版）
-
-	1、将【wind-sso.sql】导入到数据库，根据实际情况配置（有例子和表字段说明），若不想在该处修改，可部署【wind-sso-bg】系统，通过界面修改配置
 	
-	2、子系统导入【wind-sso-client.jar】，并在根目录下（工程在src，web在classese）下引入【wind-sso-client.properties】文件，并配置好相应的参数（详情查看该文件）
+	1、子系统导入【wind-sso-client.jar】，并在根目录下（工程在src，web在classese）下引入【wind-sso-client.properties】文件，并配置好相应的参数（详情查看该文件）
 	
-	3、wind-sso-client方法介绍：
+	2、wind-sso-client方法介绍：
 	
 	  （1）、SSOUtil.isLogin：是否已登录
 	
@@ -52,6 +54,29 @@
 	  （4）、SSOUtil.exit：退出（清除在redis里的会话信息）
 	
 	  （5）、SSOUtil.getSSO：获取SSO对象（附带：ssoId会话唯一标识、、session数据、session的代理对象等）
+
+   3、子系统拦截器（具有登录验证功能）在进入控制器方法前判断是否已登录，若未登录请先【获取登录页面URL（带参数）】，然后进行【重定向】跳转（SSO登录页面）。子系统首页也应该执行该逻辑，并且已登录则进入后台操作地，例：
+
+   		<%@page import="org.wind.sso.client.util.SSOUtil"%>
+		<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+		<%
+			boolean isLogin=SSOUtil.isLogin(request, response);
+			//已登录
+			if(isLogin){
+				response.sendRedirect("user");
+			}else{
+				String loginPageUrl=SSOUtil.getLoginPageUrlParam(request);
+				response.sendRedirect(loginPageUrl);
+			}
+		%>
+		<!DOCTYPE html>
+		<html xmlns="http://www.w3.org/1999/xhtml">
+		<head>
+			<title>登录跳转</title>
+		</head>
+		</html>
+
+   4、一切操作完毕后，并且部署启动成功后，请访问该系统的首页URL（或模块主页URL）验证
 	
 -- 通用接入
 	
